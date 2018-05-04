@@ -13,8 +13,13 @@ public class MainActivity extends AppCompatActivity {
 
     private int scale;
     private int level;
+    private int health;
+    private String technology = "";
     TextView scaleTextView;
     TextView tempTextView;
+    TextView messageTextView;
+    TextView healthTextView;
+    TextView techTextView;
 
 
     // フィールド
@@ -32,6 +37,12 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    public class PowerConnectionReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -45,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
     }
 
     @Override
@@ -64,11 +77,98 @@ public class MainActivity extends AppCompatActivity {
                 scale = intent.getIntExtra("scale", 0);
                 // 電池残量
                 level = intent.getIntExtra("level", 0);
+                health = intent.getIntExtra("health",0);
+                technology = intent.getStringExtra("technology");
+
+
+
             }
+
+
             scaleTextView = findViewById(R.id.textView);
             tempTextView = findViewById(R.id.textView2);
+            messageTextView = findViewById(R.id.textView3);
+            healthTextView = findViewById(R.id.textView4);
+            techTextView = findViewById(R.id.textView5);
+
+            techTextView.setText(technology);
             scaleTextView.setText("バッテリー残量: "+level+"%");
-            tempTextView.setText("バッテリー温度: "+batteryTemperature+"℃");
+            if (batteryTemperature <= 0){
+                tempTextView.setText("バッテリー温度が取得できません");
+            }else {
+                tempTextView.setText("バッテリー温度: " + batteryTemperature + "℃");
+            }
+            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL;
+
+
+            String batteryStatus = "";
+
+            switch (status) {
+                case BatteryManager.BATTERY_STATUS_UNKNOWN:
+                   batteryStatus  = "充電状況が取得できません";
+                    break;
+                case BatteryManager.BATTERY_STATUS_CHARGING:
+                    batteryStatus = "充電中です";
+                    break;
+                case BatteryManager.BATTERY_STATUS_DISCHARGING:
+                    batteryStatus = "充電していません";
+                    break;
+                case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                    batteryStatus = "充電していません";
+                    break;
+                case BatteryManager.BATTERY_STATUS_FULL:
+                    batteryStatus = "充電完了です";
+                    break;
+            }
+
+            String healthStatus = "";
+
+            switch (health) {
+                case BatteryManager.BATTERY_HEALTH_UNKNOWN:
+                    healthStatus = "Unknown";
+                    break;
+                case BatteryManager.BATTERY_HEALTH_GOOD:
+                    healthStatus = "Good";
+                    break;
+                case BatteryManager.BATTERY_HEALTH_OVERHEAT:
+                    healthStatus = "Overheat";
+                    break;
+                case BatteryManager.BATTERY_HEALTH_DEAD:
+                    healthStatus = "Dead";
+                    break;
+                case BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE:
+                    healthStatus = "Voltage";
+                    break;
+                case BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE:
+                    healthStatus = "Unspecified failure";
+                    break;
+            }
+
+            healthTextView.setText(healthStatus);
+
+            int chargePlug = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+            boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
+            boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
+
+            String chargeStatus = "";
+
+            if(usbCharge){
+             chargeStatus = "充電方法:USB";
+            }else if(acCharge) {
+            chargeStatus = "充電方法:AC";
+            }else{
+                chargeStatus = "取得できません";
+            }
+
+            if(isCharging) {
+                messageTextView.setText(batteryStatus+" "+chargeStatus);
+            }else{
+            messageTextView.setText("充電していません");
+
+
+            }
         }
     };
 }
